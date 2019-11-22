@@ -29,6 +29,7 @@ The launcher does not implement the full JNLP spec:
 - Versioned resources are not supported
 - Jardiff is not supported
 - Lazily downloaded resources are ignored (though this can be changed easily)
+- Only applications are supported, while nativelibs, extensions and installers are not.
 
 ## Roadmap
 The aim of this project is to keep things simple, but here are some ideas for improving the tool:
