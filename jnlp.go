@@ -2,52 +2,50 @@ package main
 
 import (
 	"io"
-	"net/http"
 	"net/url"
 
 	"github.com/antchfx/xmlquery"
 )
 
-func DownloadJnlp(url string) (*JnlpFile, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	jnlp, err := ParseJnlp(resp.Body)
-	return jnlp, err
-}
-
+// JnlpFile represents a JNLP descriptor
 type JnlpFile struct {
 	Codebase string
 	Base     *url.URL
 	Root     *xmlquery.Node
 }
 
+// DownloadType constants resprenting resource download attribute values
 type DownloadType int8
 
 const (
-	Eager    DownloadType = 0
+	// Eager download type
+	Eager DownloadType = 0
+	// Progress download type
 	Progress DownloadType = 1
-	Lazy     DownloadType = 2
+	// Lazy download type
+	Lazy DownloadType = 2
 )
 
+// JarResource represents a jar resource in a JNLP descriptor
 type JarResource struct {
 	Href     string
 	Main     bool
 	Download DownloadType
 }
 
+// ApplicationDesc represents an application-desc in a JNLP descriptor
 type ApplicationDesc struct {
 	MainClass string
 	Arguments []string
 }
 
+// Property represents a property resource in a JNLP descriptor
 type Property struct {
 	Name  string
 	Value string
 }
 
+// J2SE represents a j2se resource in a JNLP descriptor
 type J2SE struct {
 	Href            string
 	Version         string
@@ -55,6 +53,7 @@ type J2SE struct {
 	MaxHeapSize     string
 }
 
+// ParseJnlp parses the JNLP descriptor from the given input
 func ParseJnlp(reader io.Reader) (*JnlpFile, error) {
 	doc, err := xmlquery.Parse(reader)
 	if err != nil {
@@ -76,6 +75,7 @@ func ParseJnlp(reader io.Reader) (*JnlpFile, error) {
 	}, nil
 }
 
+// GetJarResources specifies all the jar resources contained in the JNLP descriptor
 func (x *JnlpFile) GetJarResources() ([]*JarResource, error) {
 	// Get jars
 	jars := xmlquery.Find(x.Root, "resources/jar")
@@ -107,11 +107,13 @@ func (x *JnlpFile) GetJarResources() ([]*JarResource, error) {
 	return jarResources, nil
 }
 
+// GetJarURL specifies the full URL for the given jar resource that may be used for downloading
 func (x *JnlpFile) GetJarURL(jar *JarResource) (*url.URL, error) {
 	u, err := x.Base.Parse(jar.Href)
 	return u, err
 }
 
+// GetProperties specifies all the property resources contained in the JNLP descriptor
 func (x *JnlpFile) GetProperties() []*Property {
 	props := xmlquery.Find(x.Root, "resources/property")
 	arr := make([]*Property, len(props))
@@ -124,6 +126,7 @@ func (x *JnlpFile) GetProperties() []*Property {
 	return arr
 }
 
+// GetJ2SE specifies the j2se resource contained in the JNLP descriptor
 func (x *JnlpFile) GetJ2SE() *J2SE {
 	elem := xmlquery.FindOne(x.Root, "resources/j2se")
 	href := elem.SelectAttr("href")
@@ -138,6 +141,7 @@ func (x *JnlpFile) GetJ2SE() *J2SE {
 	}
 }
 
+// GetApplicationDesc specifies the application-desc contained in the JNLP descriptor
 func (x *JnlpFile) GetApplicationDesc() *ApplicationDesc {
 	desc := xmlquery.FindOne(x.Root, "application-desc")
 	mainClass := desc.SelectAttr("main-class")

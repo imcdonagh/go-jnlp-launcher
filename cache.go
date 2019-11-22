@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 // InitCache initializes a cache backed by the specified directory.
@@ -32,4 +33,22 @@ func (x *Cache) EnsurePath(url *url.URL) (string, error) {
 	dir := path.Dir(abs)
 	err := os.MkdirAll(dir, 0755)
 	return abs, err
+}
+
+// GetLastModified specifies the last modified timestamp for a cache entry if it exists
+func (x *Cache) GetLastModified(path string) (string, error) {
+	file, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return file.ModTime().UTC().Format(time.RFC1123), nil
+}
+
+// GetEtag specifies the etag for a cache entry if it exists.
+func (x *Cache) GetEtag(path string) string {
+	// TODO implement
+	return ""
 }
