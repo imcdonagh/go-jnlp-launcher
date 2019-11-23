@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
@@ -44,11 +45,52 @@ func (x *Cache) GetLastModified(path string) (string, error) {
 		}
 		return "", err
 	}
-	return file.ModTime().UTC().Format(time.RFC1123), nil
+	lastmod := file.ModTime().UTC().Format(time.RFC1123)
+	return lastmod, nil
 }
 
 // GetEtag specifies the etag for a cache entry if it exists.
-func (x *Cache) GetEtag(path string) string {
-	// TODO implement
-	return ""
+func (x *Cache) GetEtag(path string) (string, error) {
+	etagFile := getEtagFile(path)
+	_, err := os.Stat(etagFile)
+	if os.IsNotExist(err) {
+		return "", nil
+	}
+	buf, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
+}
+
+// TouchFile touches the specified cache file with the given last modified and/or etag.
+func (x *Cache) TouchFile(file string, lastmod string, etag string) error {
+	if lastmod != "" {
+		mtime, err := time.Parse(time.RFC1123, lastmod)
+		if err != nil {
+			return err
+		}
+		err = os.Chtimes(file, mtime, mtime)
+		if err != nil {
+			return err
+		}
+	}
+	if etag != "" {
+		etagFile := getEtagFile(file)
+		f, err := os.Create(etagFile)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		_, err = f.WriteString(etag)
+		if err != nil {
+			return err
+		}
+		f.Sync()
+	}
+	return nil
+}
+
+func getEtagFile(file string) string {
+	return path.Join(path.Dir(file), ".etag."+path.Base(file))
 }

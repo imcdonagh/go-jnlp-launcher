@@ -74,11 +74,16 @@ func DownloadJars(jnlpFile *JnlpFile, jars []*JarResource, dir string) ([]string
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(path, ": ", lastmod)
-		err = DownloadFile(jarURL.String(), path, lastmod)
+		etag, err := cache.GetEtag(path)
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println(path, ": ", lastmod)
+		lastmod, etag, err = DownloadFile(jarURL.String(), path, lastmod, etag)
+		if err != nil {
+			return nil, err
+		}
+		err = cache.TouchFile(path, lastmod, etag)
 		paths[i] = path
 	}
 	return paths, nil
