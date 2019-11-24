@@ -8,7 +8,7 @@ I started this project because I wanted to learn the Go language and tools and I
 The goal of this project is to provide a simple CLI for launching Java applications without using conventional JNLP clients such as Web Start. If you frequently use the terminal to get things done, and you are working with different Java applications or versions of the same Java application deployed using JNLP, then you may find this tool useful.
 
 ## Building
-	$ git clone https://imcdonagh/go-jnlp-launcher
+	$ git clone https://github.com/imcdonagh/go-jnlp-launcher
 	$ cd go-jnlp-launcher
 	$ go build
 
